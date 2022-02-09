@@ -9,6 +9,13 @@ EditorJson::EditorJson(QWidget *parent)
 
     m_main_layout = new QVBoxLayout(this);
 
+    QString home_path = QDir::homePath();
+
+#ifdef USE_RFTE_HOME_DIR
+    home_path = QDir::homePath()+QString("/RFTE/config");
+#endif
+
+
     m_root = new QTreeWidget(this);
     QStringList headers;
     headers.append("Key");
@@ -27,15 +34,20 @@ EditorJson::EditorJson(QWidget *parent)
         }
     });
 #endif
+
+    QIcon save_icon(":/icons/save.png");
+
+
     m_save = new QPushButton("Save",this);
+    m_save->setIcon(save_icon);
     m_main_layout->addWidget(m_save);
 
-    connect(m_save,&QPushButton::clicked,[this](){
+    connect(m_save,&QPushButton::clicked,[this,home_path](){
 
 
         QString dest_file = QFileDialog::getSaveFileName(this,
                                                          tr("Save"),
-                                                         QDir::homePath(),
+                                                         home_path,
                                                          tr("json (*.json)"));
         saveToFile(dest_file);
 
@@ -67,9 +79,9 @@ EditorJson::EditorJson(QWidget *parent)
     QShortcut* open_file_short_cut = new QShortcut(QKeySequence(SHORTCUT_OPEN_FILE),this);
 
 
-    connect(open_file_short_cut,&QShortcut::activated,[this](){
+    connect(open_file_short_cut,&QShortcut::activated,[this,home_path](){
 
-        QString fileName = QFileDialog::getOpenFileName(this,tr("Open the json file"), "/", tr("Json Files (*.json)"));
+        QString fileName = QFileDialog::getOpenFileName(this,tr("Open the json file"), home_path, tr("Json Files (*.json)"));
         if(fileName.isEmpty())
             return;
         else
@@ -398,12 +410,15 @@ void EditorJson::saveValue(QJsonObject &obj, const QString &key, QVariant val)
     }
     else if(isBool(val))
     {
-
         obj.insert(key,val.toBool());
     }
     else if(isDouble(val))
     {
         obj.insert(key,val.toDouble());
+    }
+    else if(isLongLong(val))
+    {
+        obj.insert(key,val.toLongLong());
     }
     else
     {
@@ -432,34 +447,63 @@ void EditorJson::saveValue(QJsonArray &array, QVariant val)
     {
         array.push_back(val.toDouble());
     }
+    else if(isLongLong(val))
+    {
+        array.push_back(val.toLongLong());
+    }
     else
     {
         array.push_back(val.toString());
     }
 }
-
+//------------------------------------------------------
+/**
+ * @brief EditorJson::isInteger
+ * @param variant
+ * @return
+ */
 bool EditorJson::isInteger(const QVariant &variant)
 {
-    return ((variant.userType() == QMetaType::Int) || (variant.userType() == QMetaType::UInt)) ;
+    return ((variant.userType() == QMetaType::Int) || (variant.userType() == QMetaType::UInt) ) ;
 }
-
+//------------------------------------------------------
+/**
+ * @brief EditorJson::isLongLong
+ * @param variant
+ * @return
+ */
 bool EditorJson::isLongLong(const QVariant &variant)
 {
-    return variant.userType() == QMetaType::LongLong;
+    return ((variant.userType() == QMetaType::LongLong) || (variant.userType() == QMetaType::ULongLong) ) ;
 }
-
+//------------------------------------------------------
+/**
+ * @brief EditorJson::isDouble
+ * @param variant
+ * @return
+ */
 bool EditorJson::isDouble(const QVariant &variant)
 {
     return variant.userType() == QMetaType::Double;
 
 }
-
+//------------------------------------------------------
+/**
+ * @brief EditorJson::isBool
+ * @param variant
+ * @return
+ */
 bool EditorJson::isBool(const QVariant &variant)
 {
     return variant.userType() == QMetaType::Bool;
 
 }
-
+//------------------------------------------------------
+/**
+ * @brief EditorJson::isString
+ * @param variant
+ * @return
+ */
 bool EditorJson::isString(const QVariant &variant)
 {
     return variant.userType() == QMetaType::QString;
