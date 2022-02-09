@@ -29,6 +29,17 @@ typedef enum
     ARRAY
 }teDataType;
 
+
+typedef enum
+{
+    STRING = 0,
+    DOUBLE,
+    LONGLONG,
+    INT,
+    BOOL
+}teValueType;
+
+
 static const QMap<teDataType,QString> map_data_type_name{
     {teDataType::VALUE, "Value"},
     {teDataType::OBJECT, "Object"},
@@ -79,14 +90,16 @@ private:
     void resizeColumns();
 
 
-    void saveValue(QJsonObject& obj,const QString& key,QVariant val);
-    void saveValue(QJsonArray& array,QVariant val);
+    void saveValue(QJsonObject& obj,const QString& key,QVariant val,teValueType type);
+    void saveValue(QJsonArray& array,QVariant val,teValueType type);
 
     bool isInteger(const QVariant& variant);
     bool isLongLong(const QVariant& variant);
     bool isDouble(const QVariant& variant);
     bool isBool(const QVariant& variant);
     bool isString(const QVariant& variant);
+
+    teValueType valueType(const QVariant& val);
 
 
 

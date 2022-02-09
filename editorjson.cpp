@@ -138,7 +138,9 @@ QJsonObject EditorJson::convertToJsonFromJsonObject(QTreeWidgetItem *root)
         else
         {
             //res.insert(item_key,QJsonValue::fromVariant(item->data(val_column,0)));
-            saveValue(res,item_key,item->data(val_column,0));
+            QVariant val = item->data(val_column,0);
+            teValueType type = static_cast<teValueType>(item->data(val_column,Qt::UserRole).toInt());
+            saveValue(res,item_key,val,type);
 #ifdef PRINT_DEBUG
             qDebug()<<"Root - Key: "<<item->data(key_column,0)<<" Type : "<<map_data_type_name[data_type]<<" Value "<<item->data(val_column,0);
 #endif
@@ -182,7 +184,9 @@ QJsonArray EditorJson::convertToJsonFromJsonArray(QTreeWidgetItem *root)
         }
         else
         {
-            saveValue(res,item->data(val_column,0));
+            QVariant val = item->data(val_column,0);
+            teValueType type = static_cast<teValueType>(item->data(val_column,Qt::UserRole).toInt());
+            saveValue(res,val,type);
             //res.push_back(QJsonValue::fromVariant(item->data(val_column,0)));
 #ifdef PRINT_DEBUG
             qDebug()<<"Root - Key: "<<item->data(key_column,0)<<" Type : "<<map_data_type_name[data_type]<<" Value "<<item->data(val_column,0);
@@ -225,8 +229,9 @@ QJsonObject EditorJson::convertToJson()
         }
         else
         {
-//            res.insert(item_key,QJsonValue::fromVariant(item->data(val_column,0)));
-            saveValue(res,item_key,item->data(val_column,0));
+            QVariant val = item->data(val_column,0);
+            teValueType type = static_cast<teValueType>(item->data(val_column,Qt::UserRole).toInt());
+            saveValue(res,item_key,val,type);
 #ifdef PRINT_DEBUG
             qDebug()<<"Root - Key: "<<item->data(key_column,0)<<" Type : "<<map_data_type_name[data_type]<<" Value "<<item->data(val_column,0);
 #endif
@@ -252,7 +257,7 @@ QJsonObject EditorJson::saveToFile(const QString &path_file)
     QJsonObject json;
     if(!path.isEmpty())
     {
-       json = convertToJson();
+        json = convertToJson();
         QFile file_out(path_file);
         if(file_out.open(QFile::WriteOnly|QFile::Truncate))
         {
@@ -298,7 +303,10 @@ void EditorJson::setJson(const QJsonObject &json)
         {
             root_item->setData(key_column,Qt::UserRole,QVariant(static_cast<int>(teDataType::VALUE)));
             root_item->setFlags(root_item->flags() | Qt::ItemIsEditable);
+            QVariant var_val = value.toVariant();
+            teValueType type = valueType(var_val);
             root_item->setData(val_column,0,value.toVariant());
+            root_item->setData(val_column,Qt::UserRole,static_cast<int>(type));
         }
     }
     resizeColumns();
@@ -350,7 +358,10 @@ void EditorJson::convertFromJsonObject(const QJsonObject &json, QTreeWidgetItem 
         {
             root_item->setData(key_column,Qt::UserRole,QVariant(static_cast<int>(teDataType::VALUE)));
             root_item->setFlags(root_item->flags() | Qt::ItemIsEditable);
+            QVariant var_val = value.toVariant();
+            teValueType type = valueType(var_val);
             root_item->setData(val_column,0,value.toVariant());
+            root_item->setData(val_column,Qt::UserRole,static_cast<int>(type));
         }
     }
 }
@@ -382,7 +393,10 @@ void EditorJson::convertFromJsonArray(const QJsonArray &array, QTreeWidgetItem *
         {
             root_item->setData(key_column,Qt::UserRole,QVariant(static_cast<int>(teDataType::VALUE)));
             root_item->setFlags(root_item->flags() | Qt::ItemIsEditable);
+            QVariant var_val = value.toVariant();
+            teValueType type = valueType(var_val);
             root_item->setData(val_column,0,value.toVariant());
+            root_item->setData(val_column,Qt::UserRole,static_cast<int>(type));
         }
     }
 }
@@ -402,25 +416,25 @@ void EditorJson::resizeColumns()
  * @param obj
  * @param val
  */
-void EditorJson::saveValue(QJsonObject &obj, const QString &key, QVariant val)
+void EditorJson::saveValue(QJsonObject &obj, const QString &key, QVariant val, teValueType type)
 {
-    if(isInteger(val))
+    if(type == teValueType::INT)
     {
         obj.insert(key,val.toInt());
     }
-    else if(isBool(val))
+    else if(type == teValueType::BOOL)
     {
         obj.insert(key,val.toBool());
     }
-    else if(isDouble(val))
+    else if(type == teValueType::DOUBLE)
     {
         obj.insert(key,val.toDouble());
     }
-    else if(isLongLong(val))
+    else if(type == teValueType::LONGLONG)
     {
         obj.insert(key,val.toLongLong());
     }
-    else
+    else if(type == teValueType::STRING)
     {
         obj.insert(key,val.toString());
     }
@@ -432,26 +446,25 @@ void EditorJson::saveValue(QJsonObject &obj, const QString &key, QVariant val)
  * @param key
  * @param val
  */
-void EditorJson::saveValue(QJsonArray &array, QVariant val)
+void EditorJson::saveValue(QJsonArray &array, QVariant val,teValueType type)
 {
-    if(isInteger(val))
+    if(type == teValueType::INT)
     {
         array.push_back(val.toInt());
     }
-    else if(isBool(val))
+    else if(type == teValueType::BOOL)
     {
-
         array.push_back(val.toBool());
     }
-    else if(isDouble(val))
+    else if(type == teValueType::DOUBLE)
     {
         array.push_back(val.toDouble());
     }
-    else if(isLongLong(val))
+    else if(type == teValueType::LONGLONG)
     {
         array.push_back(val.toLongLong());
     }
-    else
+    else if(type == teValueType::STRING)
     {
         array.push_back(val.toString());
     }
@@ -508,4 +521,33 @@ bool EditorJson::isString(const QVariant &variant)
 {
     return variant.userType() == QMetaType::QString;
 
+}
+//------------------------------------------------------
+/**
+ * @brief EditorJson::valueType
+ * @param val
+ * @return
+ */
+teValueType EditorJson::valueType(const QVariant &val)
+{
+    teValueType type = teValueType::INT;
+
+    if(isBool(val))
+    {
+        type = teValueType::BOOL;
+    }
+    else if(isDouble(val))
+    {
+        type = teValueType::DOUBLE;
+    }
+    else if(isLongLong(val))
+    {
+        type = teValueType::LONGLONG;
+    }
+    else if(isString(val))
+    {
+        type = teValueType::STRING;
+    }
+
+    return type;
 }
