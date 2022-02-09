@@ -125,7 +125,8 @@ QJsonObject EditorJson::convertToJsonFromJsonObject(QTreeWidgetItem *root)
         }
         else
         {
-            res.insert(item_key,QJsonValue::fromVariant(item->data(val_column,0)));
+            //res.insert(item_key,QJsonValue::fromVariant(item->data(val_column,0)));
+            saveValue(res,item_key,item->data(val_column,0));
 #ifdef PRINT_DEBUG
             qDebug()<<"Root - Key: "<<item->data(key_column,0)<<" Type : "<<map_data_type_name[data_type]<<" Value "<<item->data(val_column,0);
 #endif
@@ -169,7 +170,8 @@ QJsonArray EditorJson::convertToJsonFromJsonArray(QTreeWidgetItem *root)
         }
         else
         {
-            res.push_back(QJsonValue::fromVariant(item->data(val_column,0)));
+            saveValue(res,item->data(val_column,0));
+            //res.push_back(QJsonValue::fromVariant(item->data(val_column,0)));
 #ifdef PRINT_DEBUG
             qDebug()<<"Root - Key: "<<item->data(key_column,0)<<" Type : "<<map_data_type_name[data_type]<<" Value "<<item->data(val_column,0);
 #endif
@@ -211,7 +213,8 @@ QJsonObject EditorJson::convertToJson()
         }
         else
         {
-            res.insert(item_key,QJsonValue::fromVariant(item->data(val_column,0)));
+//            res.insert(item_key,QJsonValue::fromVariant(item->data(val_column,0)));
+            saveValue(res,item_key,item->data(val_column,0));
 #ifdef PRINT_DEBUG
             qDebug()<<"Root - Key: "<<item->data(key_column,0)<<" Type : "<<map_data_type_name[data_type]<<" Value "<<item->data(val_column,0);
 #endif
@@ -380,4 +383,85 @@ void EditorJson::resizeColumns()
 {
     for(int i = 0; i < m_root->columnCount(); i++)
         m_root->resizeColumnToContents(i);
+}
+//------------------------------------------------------
+/**
+ * @brief EditorJson::saveValue
+ * @param obj
+ * @param val
+ */
+void EditorJson::saveValue(QJsonObject &obj, const QString &key, QVariant val)
+{
+    if(isInteger(val))
+    {
+        obj.insert(key,val.toInt());
+    }
+    else if(isBool(val))
+    {
+
+        obj.insert(key,val.toBool());
+    }
+    else if(isDouble(val))
+    {
+        obj.insert(key,val.toDouble());
+    }
+    else
+    {
+        obj.insert(key,val.toString());
+    }
+}
+//------------------------------------------------------
+/**
+ * @brief EditorJson::saveValue
+ * @param array
+ * @param key
+ * @param val
+ */
+void EditorJson::saveValue(QJsonArray &array, QVariant val)
+{
+    if(isInteger(val))
+    {
+        array.push_back(val.toInt());
+    }
+    else if(isBool(val))
+    {
+
+        array.push_back(val.toBool());
+    }
+    else if(isDouble(val))
+    {
+        array.push_back(val.toDouble());
+    }
+    else
+    {
+        array.push_back(val.toString());
+    }
+}
+
+bool EditorJson::isInteger(const QVariant &variant)
+{
+    return ((variant.userType() == QMetaType::Int) || (variant.userType() == QMetaType::UInt)) ;
+}
+
+bool EditorJson::isLongLong(const QVariant &variant)
+{
+    return variant.userType() == QMetaType::LongLong;
+}
+
+bool EditorJson::isDouble(const QVariant &variant)
+{
+    return variant.userType() == QMetaType::Double;
+
+}
+
+bool EditorJson::isBool(const QVariant &variant)
+{
+    return variant.userType() == QMetaType::Bool;
+
+}
+
+bool EditorJson::isString(const QVariant &variant)
+{
+    return variant.userType() == QMetaType::QString;
+
 }

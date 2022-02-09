@@ -79,6 +79,16 @@ private:
     void resizeColumns();
 
 
+    void saveValue(QJsonObject& obj,const QString& key,QVariant val);
+    void saveValue(QJsonArray& array,QVariant val);
+
+    bool isInteger(const QVariant& variant);
+    bool isLongLong(const QVariant& variant);
+    bool isDouble(const QVariant& variant);
+    bool isBool(const QVariant& variant);
+    bool isString(const QVariant& variant);
+
+
 
 };
 #endif // EDITORJSON_H
