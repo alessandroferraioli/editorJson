@@ -17,6 +17,18 @@
 #include <QVBoxLayout>
 
 
+typedef enum
+{
+    VALUE = 0,
+    OBJECT,
+    ARRAY
+}teDataType;
+
+static const QMap<teDataType,QString> map_data_type_name{
+    {teDataType::VALUE, "Value"},
+    {teDataType::OBJECT, "Object"},
+    {teDataType::ARRAY, "Array"},
+};
 constexpr int key_column{0};
 constexpr int val_column{1};
 
@@ -35,15 +47,26 @@ public:
     void setJson(const QJsonObject& json);
     ~EditorJson();
 
+public slots:
+    QJsonObject convertToJson();
+
 private:
     Ui::EditorJson *ui;
     QVBoxLayout* m_main_layout{nullptr};
     QTreeWidget *m_root{nullptr};
     QPushButton* m_save{nullptr};
 
+#ifdef CLEAR_BTN_TEST
+    QPushButton* m_clear{nullptr};
+#endif
 
-    void convertJson(const QJsonObject&json, QTreeWidgetItem* root);
-    void convertArray(const QJsonArray& array, QTreeWidgetItem* root,const QString array_key="");
+
+    void convertFromJsonObject(const QJsonObject&json, QTreeWidgetItem* root);
+    void convertFromJsonArray(const QJsonArray& array, QTreeWidgetItem* root,const QString array_key="");
+
+
+    QJsonObject convertToJsonFromJsonObject(QTreeWidgetItem* root);
+    QJsonArray convertToJsonFromJsonArray(QTreeWidgetItem* root);
 
     void resizeColumns();
 };

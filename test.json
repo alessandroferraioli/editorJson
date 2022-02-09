@@ -1,16 +1,15 @@
 {
-    "pulsar.subscriptionId":"cs_elaboration_node",
-    "key_a":10,
-    "key_b":15.5,
-    "root_in_obj":{
-        "key_0":"cs_elaboration_node",
-        "key_2":10,
-        "key_3":15.5,
-        "root_in__in_obj":{
-            "key_0":"cs_elaboration_node",
-            "key_2":10,
-            "key_3":15.5,
-            "array_inner" :[
+    "key_value_a":"value_a",
+    "key_value_b":1,
+    "key_value_c":1.1,
+    "key_object_a":{
+        "key_value_a":"value_a",
+        "key_value_a_1":1,
+        "key_object_a_2":{
+            "key_value_a_b":"value_a",
+            "key_value_a_b_1":1,
+            "key_value_a_b_2":15.5,
+            "key_array_a" :[
                 "ar_1",
                 "ar_2",
                 "ar_3",
