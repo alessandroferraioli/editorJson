@@ -20,6 +20,7 @@
 #include <QMessageBox>
 
 #define SHORTCUT_OPEN_FILE "Ctrl+o"
+#define SHORTCUT_SAVE_FILE "Ctrl+s"
 
 
 typedef enum
@@ -39,12 +40,14 @@ typedef enum
     BOOL
 }teValueType;
 
-
+#if 0
 static const QMap<teDataType,QString> map_data_type_name{
     {teDataType::VALUE, "Value"},
     {teDataType::OBJECT, "Object"},
     {teDataType::ARRAY, "Array"},
 };
+#endif
+
 constexpr int key_column{0};
 constexpr int val_column{1};
 

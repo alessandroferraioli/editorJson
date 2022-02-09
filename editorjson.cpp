@@ -37,8 +37,8 @@ EditorJson::EditorJson(QWidget *parent)
 
     QIcon save_icon(":/icons/save.png");
 
-
     m_save = new QPushButton("Save",this);
+    m_save->setMaximumSize(50,30);
     m_save->setIcon(save_icon);
     m_main_layout->addWidget(m_save);
 
@@ -73,12 +73,22 @@ EditorJson::EditorJson(QWidget *parent)
 
 #endif
 
+    QShortcut* save_file_short_cut = new QShortcut(QKeySequence(SHORTCUT_SAVE_FILE),this);
+
+
+    connect(save_file_short_cut,&QShortcut::activated,[this,home_path](){
+        QString dest_file = QFileDialog::getSaveFileName(this,
+                                                         tr("Save"),
+                                                         home_path,
+                                                         tr("json (*.json)"));
+        saveToFile(dest_file);
+
+    });
+
 
 
 
     QShortcut* open_file_short_cut = new QShortcut(QKeySequence(SHORTCUT_OPEN_FILE),this);
-
-
     connect(open_file_short_cut,&QShortcut::activated,[this,home_path](){
 
         QString fileName = QFileDialog::getOpenFileName(this,tr("Open the json file"), home_path, tr("Json Files (*.json)"));
