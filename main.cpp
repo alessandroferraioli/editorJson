@@ -8,9 +8,8 @@ int main(int argc, char *argv[])
     EditorJson editor;
     editor.show();
 
+#if 0
 
-
-#if 1
     QFile file_in("test.json");
     if(file_in.open(QFile::ReadOnly))
     {
@@ -34,7 +33,6 @@ int main(int argc, char *argv[])
 
         qDebug()<<"Writing Json : \n\n"<<json;
     }
-
 #endif
     return a.exec();
 }

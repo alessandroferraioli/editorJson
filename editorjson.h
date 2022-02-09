@@ -15,6 +15,11 @@
 
 #include <QLineEdit>
 #include <QVBoxLayout>
+#include <QShortcut>
+#include <QFileDialog>
+#include <QMessageBox>
+
+#define SHORTCUT_OPEN_FILE "Ctrl+o"
 
 
 typedef enum
@@ -45,10 +50,12 @@ public:
     EditorJson(QWidget *parent = nullptr);
 
     void setJson(const QJsonObject& json);
+    void setJson(const QString& path_file);
     ~EditorJson();
 
 public slots:
     QJsonObject convertToJson();
+    QJsonObject saveToFile(const QString& path_file ="");
 
 private:
     Ui::EditorJson *ui;
@@ -56,6 +63,7 @@ private:
     QTreeWidget *m_root{nullptr};
     QPushButton* m_save{nullptr};
 
+    QString m_path_file{""};
 #ifdef CLEAR_BTN_TEST
     QPushButton* m_clear{nullptr};
 #endif
@@ -69,5 +77,8 @@ private:
     QJsonArray convertToJsonFromJsonArray(QTreeWidgetItem* root);
 
     void resizeColumns();
+
+
+
 };
 #endif // EDITORJSON_H

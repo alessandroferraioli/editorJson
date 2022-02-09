@@ -14,6 +14,7 @@ EditorJson::EditorJson(QWidget *parent)
     headers.append("Key");
     headers.append("Val");
     m_root->setHeaderLabels(headers);
+    m_root->setAcceptDrops(true);
 
     m_main_layout->addWidget(m_root);
 
@@ -29,7 +30,18 @@ EditorJson::EditorJson(QWidget *parent)
     m_save = new QPushButton("Save",this);
     m_main_layout->addWidget(m_save);
 
-    connect(m_save,&QPushButton::clicked,this,&EditorJson::convertToJson);
+    connect(m_save,&QPushButton::clicked,[this](){
+
+
+        QString dest_file = QFileDialog::getSaveFileName(this,
+                                                         tr("Save"),
+                                                         QDir::homePath(),
+                                                         tr("json (*.json)"));
+        saveToFile(dest_file);
+
+    });
+
+
 
 
 
@@ -40,13 +52,34 @@ EditorJson::EditorJson(QWidget *parent)
 
     connect(m_clear,&QPushButton::clicked,[this](){
         for (int i = 0; i < m_root->topLevelItemCount(); ++i) {
-             QTreeWidgetItem *item = m_root->topLevelItem( i );
+            QTreeWidgetItem *item = m_root->topLevelItem( i );
 
-             delete item;
-         }
+            delete item;
+        }
+        m_root->clear();
     });
 
 #endif
+
+
+
+
+    QShortcut* open_file_short_cut = new QShortcut(QKeySequence(SHORTCUT_OPEN_FILE),this);
+
+
+    connect(open_file_short_cut,&QShortcut::activated,[this](){
+
+        QString fileName = QFileDialog::getOpenFileName(this,tr("Open the json file"), "/", tr("Json Files (*.json)"));
+        if(fileName.isEmpty())
+            return;
+        else
+        {
+            qDebug()<<"Selected file : "<<fileName;
+            setJson(fileName);
+
+        }
+
+    });
 }
 
 
@@ -75,28 +108,28 @@ QJsonObject EditorJson::convertToJsonFromJsonObject(QTreeWidgetItem *root)
 
     for( int i = 0; i < root->childCount(); ++i )
     {
-       QTreeWidgetItem *item = root->child(i );
-       teDataType data_type = static_cast<teDataType>(item->data(key_column,Qt::UserRole).toInt());
-       QString item_key =   item->data(key_column,0).toString();
+        QTreeWidgetItem *item = root->child(i );
+        teDataType data_type = static_cast<teDataType>(item->data(key_column,Qt::UserRole).toInt());
+        QString item_key =   item->data(key_column,0).toString();
 
-       //parsing
-       if(data_type == teDataType::OBJECT)
-       {
-           QJsonObject obj =  convertToJsonFromJsonObject(item);
-           res.insert(item_key,obj);
-       }
-       else if(data_type == teDataType::ARRAY)
-       {
-           QJsonArray array = convertToJsonFromJsonArray(item);
-           res.insert(item_key,array);
-       }
-       else
-       {
-           res.insert(item_key,QJsonValue::fromVariant(item->data(val_column,0)));
+        //parsing
+        if(data_type == teDataType::OBJECT)
+        {
+            QJsonObject obj =  convertToJsonFromJsonObject(item);
+            res.insert(item_key,obj);
+        }
+        else if(data_type == teDataType::ARRAY)
+        {
+            QJsonArray array = convertToJsonFromJsonArray(item);
+            res.insert(item_key,array);
+        }
+        else
+        {
+            res.insert(item_key,QJsonValue::fromVariant(item->data(val_column,0)));
 #ifdef PRINT_DEBUG
-        qDebug()<<"Root - Key: "<<item->data(key_column,0)<<" Type : "<<map_data_type_name[data_type]<<" Value "<<item->data(val_column,0);
+            qDebug()<<"Root - Key: "<<item->data(key_column,0)<<" Type : "<<map_data_type_name[data_type]<<" Value "<<item->data(val_column,0);
 #endif
-       }
+        }
 
 
     }//for loop
@@ -119,28 +152,28 @@ QJsonArray EditorJson::convertToJsonFromJsonArray(QTreeWidgetItem *root)
 #endif
     for( int i = 0; i < root->childCount(); ++i )
     {
-       QTreeWidgetItem *item = root->child(i );
-       teDataType data_type = static_cast<teDataType>(item->data(key_column,Qt::UserRole).toInt());
-       QString item_key =   item->data(key_column,0).toString();
+        QTreeWidgetItem *item = root->child(i );
+        teDataType data_type = static_cast<teDataType>(item->data(key_column,Qt::UserRole).toInt());
+        QString item_key =   item->data(key_column,0).toString();
 
-       //parsing
-       if(data_type == teDataType::OBJECT)
-       {
-           QJsonObject obj =  convertToJsonFromJsonObject(item);
-           res.push_back(obj);
-       }
-       else if(data_type == teDataType::ARRAY)
-       {
-           QJsonArray array =  convertToJsonFromJsonArray(item);
-           res.push_back(array);
-       }
-       else
-       {
-           res.push_back(QJsonValue::fromVariant(item->data(val_column,0)));
+        //parsing
+        if(data_type == teDataType::OBJECT)
+        {
+            QJsonObject obj =  convertToJsonFromJsonObject(item);
+            res.push_back(obj);
+        }
+        else if(data_type == teDataType::ARRAY)
+        {
+            QJsonArray array =  convertToJsonFromJsonArray(item);
+            res.push_back(array);
+        }
+        else
+        {
+            res.push_back(QJsonValue::fromVariant(item->data(val_column,0)));
 #ifdef PRINT_DEBUG
-        qDebug()<<"Root - Key: "<<item->data(key_column,0)<<" Type : "<<map_data_type_name[data_type]<<" Value "<<item->data(val_column,0);
+            qDebug()<<"Root - Key: "<<item->data(key_column,0)<<" Type : "<<map_data_type_name[data_type]<<" Value "<<item->data(val_column,0);
 #endif
-       }
+        }
 
 
     }//for loop
@@ -160,33 +193,67 @@ QJsonObject EditorJson::convertToJson()
     QJsonObject res;
     for( int i = 0; i < m_root->topLevelItemCount(); ++i )
     {
-       QTreeWidgetItem *item = m_root->topLevelItem( i );
-       teDataType data_type = static_cast<teDataType>(item->data(key_column,Qt::UserRole).toInt());
-       QString item_key =   item->data(key_column,0).toString();
+        QTreeWidgetItem *item = m_root->topLevelItem( i );
+        teDataType data_type = static_cast<teDataType>(item->data(key_column,Qt::UserRole).toInt());
+        QString item_key =   item->data(key_column,0).toString();
 
-       //parsing
-       if(data_type == teDataType::OBJECT)
-       {
-           QJsonObject obj =  convertToJsonFromJsonObject(item);
-           res.insert(item_key,obj);
-       }
-       else if(data_type == teDataType::ARRAY)
-       {
-           QJsonArray array = convertToJsonFromJsonArray(item);
-           res.insert(item_key,array);
+        //parsing
+        if(data_type == teDataType::OBJECT)
+        {
+            QJsonObject obj =  convertToJsonFromJsonObject(item);
+            res.insert(item_key,obj);
+        }
+        else if(data_type == teDataType::ARRAY)
+        {
+            QJsonArray array = convertToJsonFromJsonArray(item);
+            res.insert(item_key,array);
 
-       }
-       else
-       {
-        res.insert(item_key,QJsonValue::fromVariant(item->data(val_column,0)));
+        }
+        else
+        {
+            res.insert(item_key,QJsonValue::fromVariant(item->data(val_column,0)));
 #ifdef PRINT_DEBUG
-        qDebug()<<"Root - Key: "<<item->data(key_column,0)<<" Type : "<<map_data_type_name[data_type]<<" Value "<<item->data(val_column,0);
+            qDebug()<<"Root - Key: "<<item->data(key_column,0)<<" Type : "<<map_data_type_name[data_type]<<" Value "<<item->data(val_column,0);
 #endif
-       }
+        }
 
     }
 
     return res;
+}
+//------------------------------------------------------
+/**
+ * @brief EditorJson::saveToFile
+ * @param path_file
+ * @return
+ */
+QJsonObject EditorJson::saveToFile(const QString &path_file)
+{
+    QString path{m_path_file};
+    if(!path_file.isEmpty())
+        path = path_file;
+
+
+    QJsonObject json;
+    if(!path.isEmpty())
+    {
+       json = convertToJson();
+        QFile file_out(path_file);
+        if(file_out.open(QFile::WriteOnly|QFile::Truncate))
+        {
+            QJsonDocument doc(json);
+            file_out.write(doc.toJson());
+            file_out.flush();
+            file_out.close();
+        }
+    }
+    else
+    {
+        QMessageBox::warning(this,"Error","No destination file detected!");
+        qDebug()<<"Error : no output path detected! ";
+    }
+
+    return json;
 }
 
 //------------------------------------------------------
@@ -220,6 +287,25 @@ void EditorJson::setJson(const QJsonObject &json)
         }
     }
     resizeColumns();
+}
+//------------------------------------------------------
+/**
+ * @brief EditorJson::setJson
+ * @param path_file
+ */
+void EditorJson::setJson(const QString &path_file)
+{
+    m_root->clear();
+    if(!path_file.isEmpty())
+    {
+        m_path_file = path_file;
+        QFile file_in(m_path_file);
+        if(file_in.open(QFile::ReadOnly))
+        {
+            QJsonDocument doc = QJsonDocument::fromJson(file_in.readAll());
+            setJson(doc.object());
+        }
+    }
 }
 
 //------------------------------------------------------
